@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SVG Hand Gesture Selector (Interactive)</title>
+  <style>
+    :root{
+      --accent:#1f6feb;
+      --hand:#f3c99a; /* light skin tone */
+      --outline:#2b2b2b;
+      --raised-translate:-28px;
+    }
+    body{
+      font-family: Inter, system-ui, Arial, sans-serif;
+      background:#f6f7fb;
+      color:#111;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .card{
+      width:100%;
+      max-width:920px;
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(13,38,76,0.08);
+      padding:22px;
+    }
+    h1{ margin:0 0 10px 0; font-size:20px; }
+    p.small{ margin:6px 0 18px 0; color:#565a60; font-size:14px; }
+    .wrap{
+      display:flex;
+      gap:20px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .svg-area{
+      flex:0 0 420px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px;
+    }
+    .controls{
+      flex:1 1 360px;
+      min-width:260px;
+    }
+    svg{ width:360px; height:auto; touch-action: manipulation; user-select:none; -webkit-tap-highlight-color:transparent; }
+    .finger-hit{ cursor:pointer; }
+    .finger-hit:hover{ filter:brightness(.98); }
+    .finger-label{ font-size:12px; fill:#333; pointer-events:none; }
+    .btn{
+      display:inline-block;
+      margin:8px 6px 8px 0;
+      padding:10px 14px;
+      border-radius:8px;
+      background:var(--accent);
+      color:#fff;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:0 6px 14px rgba(31,111,235,0.12);
+    }
+    .btn.secondary{ background:#eef2ff; color:#1f2d78; box-shadow:none; border:1px solid #e3e7ff; }
+    .status{
+      margin-top:12px;
+      font-weight:600;
+      color:#0f1724;
+    }
+    .mini{
+      font-size:13px; color:#6b7280; margin-top:10px;
+    }
+    /* Visual raised state */
+    .raised { transform: translateY(var(--raised-translate)); transition: transform 220ms cubic-bezier(.2,.9,.3,1); }
+    .not-raised { transform: translateY(0); transition: transform 220ms cubic-bezier(.2,.9,.3,1); }
+    /* finger outlines for accessibility highlight */
+    .outline-highlight { stroke: var(--outline); stroke-width:2px; }
+    /* small legend */
+    .legend{ margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .legend .item{ display:flex; gap:6px; align-items:center; font-size:13px; color:#374151; }
+    .dot{ width:12px; height:12px; border-radius:3px; background:var(--accent); display:inline-block; }
+    @media (max-width:640px){
+      .wrap{ flex-direction:column; align-items:center; }
+      .svg-area{ flex-basis:auto; }
+      svg{ width:300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>Interactive Hand Selector (SVG)</h1>
+    <p class="small">Tap each finger to toggle it up/down. The number of raised fingers = the run. The exact finger pattern (which fingers) is also captured to compare gestures.</p>
+    <div class="wrap">
+      <div class="svg-area" aria-hidden="false">
+        <!-- Inline SVG hand (cartoon-ish). Each finger group has id finger-1 .. finger-5 (thumb .. little) -->
+        <svg id="handSvg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" aria-label="Interactive hand">
+          <defs>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.08"/>
+            </filter>
+          </defs>
+
+          <!-- palm -->
+          <g id="palm" transform="translate(0,0)">
+            <rect x="150" y="260" rx="40" ry="40" width="300" height="220" fill="var(--hand)" stroke="var(--outline)" stroke-width="4" filter="url(#shadow)"/>
+          </g>
+
+          <!-- finger groups: we place 5 groups from thumb (1) left to little (5) right.
+               each finger has a clickable <rect> or <path> with class 'finger-hit' and data-index -->
+          <!-- Thumb (finger-1) -->
+          <g id="finger-1" class="finger not-raised" data-index="1" transform="translate(110,210)">
+            <rect class="finger-hit" x="0" y="40" rx="18" ry="18" width="80" height="180" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <circle cx="40" cy="30" r="28" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <text class="finger-label" x="40" y="240" text-anchor="middle">1</text>
+          </g>
+
+          <!-- Index (finger-2) -->
+          <g id="finger-2" class="finger not-raised" data-index="2" transform="translate(210,135)">
+            <rect class="finger-hit" x="0" y="40" rx="20" ry="20" width="68" height="260" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <circle cx="34" cy="20" r="28" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <text class="finger-label" x="34" y="310" text-anchor="middle">2</text>
+          </g>
+
+          <!-- Middle (finger-3) -->
+          <g id="finger-3" class="finger not-raised" data-index="3" transform="translate(300,110)">
+            <rect class="finger-hit" x="0" y="40" rx="22" ry="22" width="70" height="280" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <circle cx="35" cy="18" r="28" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <text class="finger-label" x="35" y="330" text-anchor="middle">3</text>
+          </g>
+
+          <!-- Ring (finger-4) -->
+          <g id="finger-4" class="finger not-raised" data-index="4" transform="translate(390,135)">
+            <rect class="finger-hit" x="0" y="40" rx="20" ry="20" width="66" height="260" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <circle cx="33" cy="20" r="28" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <text class="finger-label" x="33" y="310" text-anchor="middle">4</text>
+          </g>
+
+          <!-- Little (finger-5) -->
+          <g id="finger-5" class="finger not-raised" data-index="5" transform="translate(475,180)">
+            <rect class="finger-hit" x="0" y="40" rx="18" ry="18" width="58" height="200" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <circle cx="29" cy="30" r="26" fill="var(--hand)" stroke="var(--outline)" stroke-width="4"/>
+            <text class="finger-label" x="29" y="240" text-anchor="middle">5</text>
+          </g>
+
+          <!-- subtle shadow under whole hand -->
+          <ellipse cx="300" cy="520" rx="160" ry="22" fill="#000" opacity="0.06" />
+        </svg>
+      </div>
+
+      <div class="controls" aria-live="polite">
+        <div>
+          <button class="btn" id="btnLock">Lock Gesture</button>
+          <button class="btn secondary" id="btnReset">Reset</button>
+          <button class="btn secondary" id="btnShow">Show Gesture</button>
+        </div>
+
+        <div class="status" id="status">Selected fingers: <span id="selCount">0</span></div>
+        <div class="mini" id="selList">Pattern: none</div>
+
+        <div class="legend">
+          <div class="item"><span class="dot"></span> Tap fingers to toggle up/down</div>
+          <div class="item">Raised fingers = runs (count)</div>
+          <div class="item">Exact pattern is stored for gesture comparison</div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <label style="font-size:13px;color:#566173">Simulate opponent pattern (for testing):</label><br/>
+          <input id="simPattern" type="text" placeholder="eg: 1,0,1,0,0  (thumb..little)" style="padding:8px;margin-top:8px;width:100%;border-radius:8px;border:1px solid #e5e7eb"/>
+          <button class="btn" id="btnSim">Apply Simulated Opponent</button>
+        </div>
+
+        <div style="margin-top:12px;">
+          <strong>Debug / Output</strong>
+          <pre id="output" style="background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #eef2f6;margin-top:8px;font-size:13px"></pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // finger order mapping: 1=thumb,2=index,3=middle,4=ring,5=little
+    const fingers = [1,2,3,4,5].map(i => document.getElementById('finger-' + i));
+    const selCountEl = document.getElementById('selCount');
+    const selListEl = document.getElementById('selList');
+    const outputEl = document.getElementById('output');
+    const btnLock = document.getElementById('btnLock');
+    const btnReset = document.getElementById('btnReset');
+    const btnShow = document.getElementById('btnShow');
+    const btnSim = document.getElementById('btnSim');
+    const simInput = document.getElementById('simPattern');
+
+    // state
+    // each finger group has dataset 'raised' true/false via class 'raised' vs 'not-raised'
+    function isRaised(g){ return g.classList.contains('raised'); }
+    function setRaised(g, val){
+      g.classList.remove('raised','not-raised');
+      g.classList.add(val ? 'raised' : 'not-raised');
+    }
+
+    // initialize all as not raised
+    fingers.forEach(g => setRaised(g, false));
+
+    // attach click handlers
+    fingers.forEach(g => {
+      const hit = g.querySelector('.finger-hit'); // rectangle/shape clickable
+      hit.addEventListener('click', (ev) => {
+        // toggle
+        const curr = isRaised(g);
+        setRaised(g, !curr);
+        refreshUI();
+      });
+      // also allow tapping the whole group area
+      g.addEventListener('click', (ev)=> {
+        // avoid double-trigger if inner rect fired; ensure single toggle
+        if(ev.target.classList && ev.target.classList.contains('finger-hit')) return;
+        const curr = isRaised(g);
+        setRaised(g, !curr);
+        refreshUI();
+      });
+    });
+
+    // refresh UI (count + pattern)
+    function refreshUI(){
+      const pattern = getPattern(); // array of 0/1
+      const count = pattern.reduce((s,v)=>s+v,0);
+      selCountEl.innerText = count;
+      selListEl.innerText = 'Pattern: ' + pattern.join(',');
+      outputEl.innerText = 'Gesture object:\n' + JSON.stringify(getGesture(), null, 2);
+    }
+
+    // return pattern array [thumb..little] with 0/1
+    function getPattern(){
+      return fingers.map(g => isRaised(g) ? 1 : 0);
+    }
+
+    // return gesture object: positions + count + human label
+    function getGesture(){
+      const patt = getPattern();
+      const count = patt.reduce((s,v)=>s+v,0);
+      // label example: Thumb+Index or "Thumb+Little" etc.
+      const names = ['Thumb','Index','Middle','Ring','Little'];
+      const raisedNames = patt.map((v,i)=> v ? names[i] : null).filter(Boolean);
+      return {
+        pattern: patt,
+        count: count,
+        human: raisedNames.length ? raisedNames.join('+') : 'None'
+      };
+    }
+
+    // lock gesture (simulate submit)
+    btnLock.addEventListener('click', ()=>{
+      const g = getGesture();
+      // visual feedback: make all finger-hit non-clickable by removing pointer cursor
+      fingers.forEach(f => f.querySelector('.finger-hit').style.pointerEvents = 'none');
+      btnLock.disabled = true;
+      btnLock.innerText = 'Locked';
+      outputEl.innerText = 'Gesture locked:\n' + JSON.stringify(g, null, 2);
+    });
+
+    // reset
+    btnReset.addEventListener('click', ()=>{
+      fingers.forEach(f => {
+        setRaised(f, false);
+        f.querySelector('.finger-hit').style.pointerEvents = '';
+      });
+      btnLock.disabled = false;
+      btnLock.innerText = 'Lock Gesture';
+      refreshUI();
+    });
+
+    // show gesture (display current)
+    btnShow.addEventListener('click', ()=>{
+      const g = getGesture();
+      outputEl.innerText = 'Current gesture:\n' + JSON.stringify(g, null, 2);
+      alert('Gesture: ' + g.human + '  (' + g.count + ' fingers)');
+    });
+
+    // simulate opponent for quick testing
+    btnSim.addEventListener('click', ()=>{
+      const raw = simInput.value.trim();
+      if(!raw) { alert('Type a pattern like 1,0,1,0,0'); return; }
+      const parts = raw.split(',').map(x=> x.trim() === '1' ? 1 : 0);
+      if(parts.length !== 5) { alert('Pattern must have 5 values: thumb..little'); return; }
+      // show simulated output
+      outputEl.innerText = 'Simulated opponent pattern:\n' + JSON.stringify({pattern:parts, count: parts.reduce((s,v)=>s+v,0)}, null, 2);
+      // optionally compare with current player's gesture
+      const mine = getGesture();
+      const theirs = { pattern: parts, count: parts.reduce((s,v)=>s+v,0) };
+      const res = compareGestures(mine, theirs, {multiplayer:false});
+      outputEl.innerText += '\n\nComparison result:\n' + JSON.stringify(res, null, 2);
+      alert('Comparison: ' + res.result + (res.detail ? (' — ' + res.detail) : ''));
+    });
+
+    // compareGestures: returns { result: 'out'|'dot'|'runs'|'none', detail: ... }
+    // options: multiplayer true/false (singleplayer has no dot)
+    function compareGestures(batsman, opponent, options = {multiplayer:true}){
+      // batsman.pattern e.g. [1,0,0,0,0]
+      // opponent.pattern same shape
+      // For multiplayer we may supply multiple opponents — here we demonstrate single-opponent logic
+      // Rule simplified:
+      // - If patterns are identical (same positions) => OUT
+      // - Else if counts are same and multiplayer => DOT (in multi where multiple players match among them)
+      // - Else => RUNS (batsman.count)
+      const samePattern = JSON.stringify(batsman.pattern) === JSON.stringify(opponent.pattern);
+      const sameCount = batsman.count === opponent.count;
+      if(samePattern) return { result:'out', detail:'Exact pattern matched (same fingers positions)' };
+      if(!options.multiplayer && sameCount) {
+        // single player: if same count but pattern different, it's not dot; in singleplayer only out or runs allowed
+        return { result:'runs', detail:`Counts same but singleplayer: runs = ${batsman.count}` };
+      }
+      if(options.multiplayer && sameCount) return { result:'dot', detail:'Counts matched but pattern differs' };
+      return { result:'runs', detail:`Runs = ${batsman.count}` };
+    }
+
+    // initialize UI
+    refreshUI();
+
+    // Accessibility: keyboard toggles (1-5)
+    window.addEventListener('keydown', (e)=>{
+      if(e.key >= '1' && e.key <= '5'){
+        const idx = parseInt(e.key,10) - 1;
+        const g = fingers[idx];
+        setRaised(g, !isRaised(g));
+        refreshUI();
+      }
+      if(e.key === 'r') btnReset.click();
+      if(e.key === 'l') btnLock.click();
+    });
+
+    // Expose functions for integrating into full game
+    window.handSelector = {
+      getGesture,
+      lock: ()=> btnLock.click(),
+      reset: ()=> btnReset.click(),
+      compare: compareGestures
+    };
+
+  </script>
+</body>
+</html>
